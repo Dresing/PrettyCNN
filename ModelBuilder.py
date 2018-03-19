@@ -4,35 +4,38 @@ import sys
 
 class ModelBuilder:
 
-	def __init__(self, data, model):
+	def __init__(self, data):
 		self.X = tf.placeholder(tf.float32, [None, data.pixels])
 		self.Y = tf.placeholder(tf.float32, [None, data.classes])
 		self.num_classes = data.classes
 		self.keep_prob = tf.placeholder(tf.float32)
 		self.isTraining = tf.placeholder(tf.bool)
 		self.data  = data
-		self.manipulator = manipulator
-		self.model = model
-
-
-
-
-	def input(self):
-
 		self.model = tf.reshape(self.X, shape=[-1, self.data.size, self.data.size, self.data.channels])
-
-
 		self.prev_input_size = self.data.channels
 		self.height = self.data.size
 		self.width = self.data.size
 
+	def flipHorizontal(self):
 		# If we are currently training, perform some manipulation of the images from the input layer
-		if self.manipulator is not None:
-			self.model = tf.cond(self.isTraining, lambda: self.manipulator.applyOn(self.model), lambda: self.model)
-
-
+		self.model = tf.cond(self.isTraining, lambda: tf.map_fn(lambda image: tf.image.random_flip_left_right(image), self.model), lambda: self.model)
 		return self
 
+	def contrast(self, lower=0.5, upper=1.5):
+		self.model = tf.cond(self.isTraining, lambda: tf.minimum(tf.maximum(tf.map_fn(lambda image: tf.image.random_contrast(image, lower=lower, upper=upper), self.model), 0.0), 1.0), lambda: self.model)
+		return self
+
+	def brightness(self, upper = 0.3):
+		self.model = tf.cond(self.isTraining, lambda: tf.minimum(tf.maximum(tf.map_fn(lambda image: tf.image.random_brightness(image, max_delta=upper), self.model), 0.0), 1.0), lambda: self.model)
+		return self
+
+	def saturation(self, lower=0.0, upper=2.0):
+		self.model = tf.cond(self.isTraining, lambda: tf.minimum(tf.maximum(tf.map_fn(lambda image: tf.image.random_saturation(image, lower=lower, upper=upper), self.model), 0.0),1.0), lambda: self.model)
+		return self
+
+	def hue(self,  upper=0.05):
+		self.model = tf.cond(self.isTraining, lambda: tf.minimum(tf.maximum(tf.map_fn(lambda image: tf.image.random_hue(image, max_delta=upper), self.model), 0.0),1.0), lambda: self.model)
+		return self
 
 	def conv(self, filters = 32, size = 5, strides = 1):
 

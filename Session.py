@@ -67,5 +67,7 @@ class Session:
 		print("Testing Accuracy:", \
 			self.sess.run(self.evaluator.accuracy, feed_dict={self.evaluator.builder.X: self.data.testX[:256],
 		                                      self.evaluator.builder.Y: self.data.testY[:256],
-		                                      self.evaluator.builder.keep_prob: 1.0}))
+		                                      self.evaluator.builder.keep_prob: 1.0,
+		                                      self.evaluator.builder.isTraining: False
+		                                      }))
 		return self
