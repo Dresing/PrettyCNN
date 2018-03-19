@@ -42,12 +42,20 @@ class Session:
 	    for step in range(1, self.num_steps+1):
 	        batch_x, batch_y = self.data.next_train_batch(self.batch_size)
 	        # Run optimization op (backprop)
-	        self.sess.run(self.evaluator.optimizer, feed_dict={self.evaluator.builder.X: batch_x, self.evaluator.builder.Y: batch_y, self.evaluator.builder.keep_prob: 0.75})
+	        self.sess.run(self.evaluator.optimizer, feed_dict={ 
+	        	self.evaluator.builder.X: batch_x,
+	        	self.evaluator.builder.Y: batch_y,
+	        	self.evaluator.builder.keep_prob: 0.75,
+	        	self.evaluator.builder.isTraining: True
+	        	})
 	        if step % self.display_step == 0 or step == 1:
 	            # Calculate batch loss and accuracy
-	            loss, acc = self.sess.run([self.evaluator.loss, self.evaluator.accuracy], feed_dict={self.evaluator.builder.X: batch_x,
+	            loss, acc = self.sess.run([self.evaluator.loss, self.evaluator.accuracy], feed_dict={
+	            													self.evaluator.builder.X: batch_x,
 	                                                                 self.evaluator.builder.Y: batch_y,
-	                                                                 self.evaluator.builder.keep_prob: 1.0})
+	                                                                 self.evaluator.builder.keep_prob: 1.0,
+	                                                                 self.evaluator.builder.isTraining: False
+	                                                                 })
 	            print("Step " + str(step) + ", Minibatch Loss= " + \
 	                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
 	                  "{:.3f}".format(acc))

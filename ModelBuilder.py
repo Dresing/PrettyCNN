@@ -1,14 +1,19 @@
 import tensorflow as tf
+import sys
 
 
 class ModelBuilder:
 
-	def __init__(self, data):
+	def __init__(self, data, model):
 		self.X = tf.placeholder(tf.float32, [None, data.pixels])
 		self.Y = tf.placeholder(tf.float32, [None, data.classes])
 		self.num_classes = data.classes
 		self.keep_prob = tf.placeholder(tf.float32)
+		self.isTraining = tf.placeholder(tf.bool)
 		self.data  = data
+		self.manipulator = manipulator
+		self.model = model
+
 
 
 
@@ -16,9 +21,15 @@ class ModelBuilder:
 
 		self.model = tf.reshape(self.X, shape=[-1, self.data.size, self.data.size, self.data.channels])
 
+
 		self.prev_input_size = self.data.channels
 		self.height = self.data.size
 		self.width = self.data.size
+
+		# If we are currently training, perform some manipulation of the images from the input layer
+		if self.manipulator is not None:
+			self.model = tf.cond(self.isTraining, lambda: self.manipulator.applyOn(self.model), lambda: self.model)
+
 
 		return self
 
@@ -50,13 +61,16 @@ class ModelBuilder:
 		self.model = tf.nn.max_pool(self.model, ksize=[1, size, size, 1], strides=[1, strides, strides, 1], padding='SAME')
 
 		## Recalculate model size
-		self.width = int((self.width - size) / strides + 1)
-		self.height = int((self.height - size) / strides + 1)
+		self.width = int((self.width - size) / strides + 1) 
+		self.height = int((self.height - size) / strides + 1) 
 
 		return self
 
 
 	def reshape(self):
+		self.width += 1
+		self.height += 1
+
 		self.model = tf.reshape(self.model, [-1, self.width * self.height * self.prev_input_size])
 
 		return self
